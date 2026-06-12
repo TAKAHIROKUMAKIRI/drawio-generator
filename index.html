@@ -351,10 +351,7 @@ function addPptxLine(slide, x1, y1, x2, y2) {
       fill: { color: "000000" },
       margin: 0
     });
-    return;
-  }
-
-  if (Math.abs(x1 - x2) < 0.01) {
+  } else if (Math.abs(x1 - x2) < 0.01) {
     slide.addText("", {
       x: x1,
       y: Math.min(y1, y2),
@@ -363,24 +360,7 @@ function addPptxLine(slide, x1, y1, x2, y2) {
       fill: { color: "000000" },
       margin: 0
     });
-    return;
   }
-
-  // 斜め線はPowerPoint破損回避のため細いテキストボックスで近似
-  const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-  const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-
-  slide.addText("", {
-    x: x1,
-    y: y1,
-    w: length,
-    h: t,
-    rotate: angle,
-    fill: { color: "000000" },
-    line: { color: "000000", transparency: 100 },
-    margin: 0
-  });
-}
 }
 
 function addPptxKeyLine(slide, points) {
@@ -440,9 +420,9 @@ async function downloadPptx() {
   addPptxLine(slide, 3.5, 3.8, 3.5, 4.6);
   addPptxLine(slide, 9.9, 3.8, 9.9, 4.6);
 
-  // たすき掛け：斜め線
-addPptxLine(slide, 4.7, 3.45, 8.0, 4.6);
-addPptxLine(slide, 8.7, 3.45, 5.4, 4.6);
+  // たすき掛け：カギ線
+addPptxKeyLine(slide, [[4.7,3.45],[6.0,3.45],[6.0,4.6],[8.0,4.6]]);
+addPptxKeyLine(slide, [[8.7,3.45],[7.4,3.45],[7.4,4.6],[5.4,4.6]]);
 
   // HA
   addPptxLine(slide, 5.4, 5.25, 8.0, 5.25);
