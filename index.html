@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <title>VSR構成図ジェネレーター</title>
+
+<script src="https://unpkg.com/pptxgenjs/dist/pptxgen.bundle.js"></script>
+
 <style>
   body { margin:0; font-family:Arial, sans-serif; background:#f4f6f8; }
   .wrap { display:flex; height:100vh; }
@@ -12,13 +15,10 @@
   input { width:100%; box-sizing:border-box; padding:7px; margin-top:4px; }
   button { width:100%; padding:10px; margin-top:12px; font-weight:bold; cursor:pointer; }
   svg { background:white; border:1px solid #ccc; }
-  .box { fill:#fff; stroke:#333; stroke-width:1.5; rx:8; }
-  .blue { fill:#e8f1ff; }
-  .green { fill:#e9f8ed; }
-  .yellow { fill:#fff7d6; }
-  .line { stroke:#333; stroke-width:2; fill:none; marker-end:url(#arrow); }
-  text { font-size:13px; text-anchor:middle; dominant-baseline:middle; }
-  .title { font-size:20px; font-weight:bold; }
+  .box { fill:#fff; stroke:#000; stroke-width:1.6; rx:8; }
+  .line { stroke:#000; stroke-width:2; fill:none; }
+  text { font-size:14px; text-anchor:middle; dominant-baseline:middle; }
+  .title { font-size:28px; font-weight:bold; }
 
   #drawioModal {
     display:none;
@@ -48,7 +48,6 @@
     margin:0;
   }
 </style>
-  <script src="https://unpkg.com/pptxgenjs/dist/pptxgen.bundle.js"></script>
 </head>
 
 <body>
@@ -140,51 +139,75 @@ function esc(s){
     .replaceAll('"',"&quot;");
 }
 
-function box(svg,x,y,w,h,label,cls=""){
-  svg.innerHTML += `<rect class="box ${cls}" x="${x}" y="${y}" width="${w}" height="${h}"></rect>`;
+function box(svg,x,y,w,h,label){
+  svg.innerHTML += `<rect class="box" x="${x}" y="${y}" width="${w}" height="${h}"></rect>`;
   const lines = label.split("\n");
   lines.forEach((t,i)=>{
-    svg.innerHTML += `<text x="${x+w/2}" y="${y+h/2 + (i-(lines.length-1)/2)*18}">${esc(t)}</text>`;
+    svg.innerHTML += `<text x="${x+w/2}" y="${y+h/2 + (i-(lines.length-1)/2)*22}">${esc(t)}</text>`;
   });
+}
+
+function cloud(svg,x,y,w,h,label){
+  const d = `
+    M ${x+30} ${y+h*0.55}
+    C ${x+5} ${y+h*0.55}, ${x+5} ${y+h*0.25}, ${x+35} ${y+h*0.25}
+    C ${x+45} ${y}, ${x+85} ${y}, ${x+100} ${y+20}
+    C ${x+125} ${y-5}, ${x+170} ${y+5}, ${x+180} ${y+30}
+    C ${x+215} ${y+25}, ${x+235} ${y+55}, ${x+215} ${y+75}
+    C ${x+205} ${y+100}, ${x+165} ${y+105}, ${x+145} ${y+88}
+    C ${x+120} ${y+110}, ${x+75} ${y+105}, ${x+65} ${y+82}
+    C ${x+35} ${y+90}, ${x+10} ${y+75}, ${x+30} ${y+h*0.55}
+    Z`;
+  svg.innerHTML += `<path d="${d}" fill="#fff" stroke="#000" stroke-width="1.6"></path>`;
+  svg.innerHTML += `<text x="${x+w/2}" y="${y+h/2+5}" style="font-size:18px;">${esc(label)}</text>`;
 }
 
 function line(svg,x1,y1,x2,y2){
   svg.innerHTML += `<path class="line" d="M${x1},${y1} L${x2},${y2}"></path>`;
 }
 
+function keyLine(svg, points){
+  let d = `M${points[0][0]},${points[0][1]}`;
+  for(let i=1; i<points.length; i++){
+    d += ` L${points[i][0]},${points[i][1]}`;
+  }
+  svg.innerHTML += `<path class="line" d="${d}"></path>`;
+}
+
 function render(){
   const svg = document.getElementById("diagram");
-  svg.innerHTML = `
-    <defs>
-      <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-        <path d="M0,0 L0,6 L9,3 z" fill="#333"></path>
-      </marker>
-    </defs>
-    <text class="title" x="550" y="35">${esc(v("project"))}</text>
-  `;
+  svg.innerHTML = `<text class="title" x="550" y="35">${esc(v("project"))}</text>`;
 
-  box(svg, 470, 70, 160, 55, "Internet", "blue");
-  box(svg, 240, 160, 210, 70, `${v("wan1")}\nGW: ${v("wan1gw")}`, "yellow");
-  box(svg, 650, 160, 210, 70, `${v("wan2")}\nGW: ${v("wan2gw")}`, "yellow");
-  box(svg, 230, 285, 230, 70, `L2スイッチ①\nWAN1収容`, "green");
-  box(svg, 640, 285, 230, 70, `L2スイッチ②\nWAN2収容`, "green");
+  cloud(svg, 425, 70, 250, 120, "Internet");
 
-  box(svg, 250, 430, 260, 120, `${v("active")}\n${v("model")}\nWAN1: ${v("wan1ip")}\nWAN2: ${v("wan2ip")}\nLAN: ${v("lanip")}`, "blue");
-  box(svg, 590, 430, 260, 120, `${v("standby")}\n${v("model")}\nHA: ${v("haip")}`, "blue");
+  box(svg, 185, 180, 210, 70, `${v("wan1")}\nGW: ${v("wan1gw")}`);
+  box(svg, 705, 180, 210, 70, `${v("wan2")}\nGW: ${v("wan2gw")}`);
 
-  box(svg, 390, 610, 320, 70, `お客様L2スイッチ\n内部NW: ${v("lan")}`, "green");
-  box(svg, 820, 610, 190, 70, `公開サーバ\n${v("server")}`, "yellow");
+  box(svg, 185, 320, 210, 70, `L2スイッチ①\nWAN1収容`);
+  box(svg, 705, 320, 210, 70, `L2スイッチ②\nWAN2収容`);
 
-  line(svg,550,125,345,160);
-  line(svg,550,125,755,160);
-  line(svg,345,230,345,285);
-  line(svg,755,230,755,285);
-  line(svg,345,355,380,430);
-  line(svg,755,355,720,430);
-  line(svg,510,490,590,490);
-  line(svg,380,550,520,610);
-  line(svg,720,550,580,610);
-  line(svg,510,500,820,645);
+  box(svg, 170, 470, 300, 140, `${v("active")}\n${v("model")}\nWAN1: ${v("wan1ip")}\nWAN2: ${v("wan2ip")}\nLAN: ${v("lanip")}`);
+  box(svg, 650, 470, 300, 140, `${v("standby")}\n${v("model")}\nHA: ${v("haip")}`);
+
+  box(svg, 275, 690, 350, 70, `お客様L2スイッチ\n内部NW: ${v("lan")}`);
+  box(svg, 725, 690, 250, 70, `公開サーバ\n${v("server")}`);
+
+  keyLine(svg, [[425,130],[290,130],[290,180]]);
+  keyLine(svg, [[675,130],[810,130],[810,180]]);
+
+  line(svg,290,250,290,320);
+  line(svg,810,250,810,320);
+
+  line(svg,290,390,320,470);
+  line(svg,810,390,800,470);
+
+  line(svg,395,355,650,500);
+  line(svg,705,355,470,500);
+
+  line(svg,470,540,650,540);
+
+  keyLine(svg, [[320,610],[320,655],[450,655],[450,690]]);
+  keyLine(svg, [[800,610],[800,655],[850,655],[850,690]]);
 }
 
 function mxCell(id, value, x, y, w, h, style){
@@ -194,40 +217,39 @@ function mxCell(id, value, x, y, w, h, style){
     </mxCell>`;
 }
 
-function edge(id, source, target){
+function edge(id, source, target, points=""){
   return `
-    <mxCell id="${id}" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="${source}" target="${target}">
-      <mxGeometry relative="1" as="geometry"/>
+    <mxCell id="${id}" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;" edge="1" parent="1" source="${source}" target="${target}">
+      <mxGeometry relative="1" as="geometry">${points}</mxGeometry>
     </mxCell>`;
 }
 
 function generateDrawioXml(){
-  const styleBlue = "rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#333333;";
-  const styleGreen = "rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f8ed;strokeColor=#333333;";
-  const styleYellow = "rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7d6;strokeColor=#333333;";
+  const boxStyle = "rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;";
+  const cloudStyle = "shape=cloud;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;";
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="app.diagrams.net">
   <diagram name="VSR構成図">
-    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="0" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
 
-        ${mxCell("title", v("project"), 430, 20, 300, 40, "text;html=1;strokeColor=none;fillColor=none;fontSize=20;fontStyle=1;")}
+        ${mxCell("title", v("project"), 370, 20, 420, 40, "text;html=1;strokeColor=none;fillColor=none;fontSize=28;fontStyle=1;")}
+        ${mxCell("internet", "Internet", 455, 85, 250, 100, cloudStyle)}
 
-        ${mxCell("internet", "Internet", 500, 80, 160, 55, styleBlue)}
-        ${mxCell("wan1", `${v("wan1")}\nGW: ${v("wan1gw")}`, 250, 170, 210, 70, styleYellow)}
-        ${mxCell("wan2", `${v("wan2")}\nGW: ${v("wan2gw")}`, 700, 170, 210, 70, styleYellow)}
+        ${mxCell("wan1", `${v("wan1")}\nGW: ${v("wan1gw")}`, 210, 190, 220, 70, boxStyle)}
+        ${mxCell("wan2", `${v("wan2")}\nGW: ${v("wan2gw")}`, 730, 190, 220, 70, boxStyle)}
 
-        ${mxCell("l2a", "L2スイッチ①\nWAN1収容", 240, 300, 230, 70, styleGreen)}
-        ${mxCell("l2b", "L2スイッチ②\nWAN2収容", 690, 300, 230, 70, styleGreen)}
+        ${mxCell("l2a", "L2スイッチ①\nWAN1収容", 210, 330, 220, 70, boxStyle)}
+        ${mxCell("l2b", "L2スイッチ②\nWAN2収容", 730, 330, 220, 70, boxStyle)}
 
-        ${mxCell("active", `${v("active")}\n${v("model")}\nWAN1: ${v("wan1ip")}\nWAN2: ${v("wan2ip")}\nLAN: ${v("lanip")}`, 260, 450, 270, 125, styleBlue)}
-        ${mxCell("standby", `${v("standby")}\n${v("model")}\nHA: ${v("haip")}`, 630, 450, 270, 125, styleBlue)}
+        ${mxCell("active", `${v("active")}\n${v("model")}\nWAN1: ${v("wan1ip")}\nWAN2: ${v("wan2ip")}\nLAN: ${v("lanip")}`, 190, 480, 320, 140, boxStyle)}
+        ${mxCell("standby", `${v("standby")}\n${v("model")}\nHA: ${v("haip")}`, 690, 480, 320, 140, boxStyle)}
 
-        ${mxCell("customer", `お客様L2スイッチ\n内部NW: ${v("lan")}`, 410, 650, 340, 70, styleGreen)}
-        ${mxCell("server", `公開サーバ\n${v("server")}`, 850, 650, 200, 70, styleYellow)}
+        ${mxCell("customer", `お客様L2スイッチ\n内部NW: ${v("lan")}`, 330, 700, 350, 70, boxStyle)}
+        ${mxCell("server", `公開サーバ\n${v("server")}`, 760, 700, 250, 70, boxStyle)}
 
         ${edge("e1","internet","wan1")}
         ${edge("e2","internet","wan2")}
@@ -235,10 +257,11 @@ function generateDrawioXml(){
         ${edge("e4","wan2","l2b")}
         ${edge("e5","l2a","active")}
         ${edge("e6","l2b","standby")}
-        ${edge("e7","active","standby")}
-        ${edge("e8","active","customer")}
-        ${edge("e9","standby","customer")}
-        ${edge("e10","active","server")}
+        ${edge("e7","l2a","standby")}
+        ${edge("e8","l2b","active")}
+        ${edge("e9","active","standby")}
+        ${edge("e10","active","customer")}
+        ${edge("e11","standby","server")}
       </root>
     </mxGraphModel>
   </diagram>
@@ -254,8 +277,7 @@ function download(blob, filename){
 }
 
 function downloadDrawio(){
-  const xml = generateDrawioXml();
-  download(new Blob([xml], {type:"application/xml"}), "vsr_diagram.drawio");
+  download(new Blob([generateDrawioXml()], {type:"application/xml"}), "vsr_diagram.drawio");
 }
 
 function downloadSvg(){
@@ -266,9 +288,7 @@ function downloadSvg(){
 function openDrawioEmbed(){
   const modal = document.getElementById("drawioModal");
   const frame = document.getElementById("drawioFrame");
-
   modal.style.display = "block";
-
   frame.src = "https://embed.diagrams.net/?embed=1&proto=json&spin=1&ui=min&libraries=1";
 }
 
@@ -281,11 +301,7 @@ window.addEventListener("message", function(evt){
   if (!evt.data) return;
 
   let msg;
-  try {
-    msg = JSON.parse(evt.data);
-  } catch(e) {
-    return;
-  }
+  try { msg = JSON.parse(evt.data); } catch(e) { return; }
 
   const frame = document.getElementById("drawioFrame");
 
@@ -307,39 +323,32 @@ window.addEventListener("message", function(evt){
     download(new Blob([msg.data], {type:"application/xml"}), "vsr_diagram_edited.drawio");
   }
 
-  if (msg.event === "exit") {
-    closeDrawioEmbed();
-  }
+  if (msg.event === "exit") closeDrawioEmbed();
 });
 
-  document.getElementById("pptxBtn").addEventListener("click", function () {
-  downloadPptx();
-});
-  
-render();
-  function addPptxBox(slide, x, y, w, h, text, fill) {
+function addPptxBox(slide, x, y, w, h, text) {
   slide.addText(text, {
     x, y, w, h,
     fontSize: 10,
     color: "000000",
     align: "center",
     valign: "mid",
-    fill: { color: fill },
-    line: { color: "333333", width: 1 },
+    fill: { color: "FFFFFF" },
+    line: { color: "000000", width: 1 },
     margin: 0.05
   });
 }
 
 function addPptxLine(slide, x1, y1, x2, y2) {
-  const thickness = 0.02;
+  const t = 0.018;
 
   if (Math.abs(y1 - y2) < 0.01) {
     slide.addText("", {
-      x: Math.min(x1, x2),
+      x: Math.min(x1,x2),
       y: y1,
-      w: Math.abs(x2 - x1),
-      h: thickness,
-      fill: { color: "333333" },
+      w: Math.abs(x2-x1),
+      h: t,
+      fill: { color: "000000" },
       margin: 0
     });
     return;
@@ -348,19 +357,30 @@ function addPptxLine(slide, x1, y1, x2, y2) {
   if (Math.abs(x1 - x2) < 0.01) {
     slide.addText("", {
       x: x1,
-      y: Math.min(y1, y2),
-      w: thickness,
-      h: Math.abs(y2 - y1),
-      fill: { color: "333333" },
+      y: Math.min(y1,y2),
+      w: t,
+      h: Math.abs(y2-y1),
+      fill: { color: "000000" },
       margin: 0
     });
     return;
   }
 
-  const midY = y1 + (y2 - y1) / 2;
-  addPptxLine(slide, x1, y1, x1, midY);
-  addPptxLine(slide, x1, midY, x2, midY);
-  addPptxLine(slide, x2, midY, x2, y2);
+  slide.addText("", {
+    x: Math.min(x1,x2),
+    y: Math.min(y1,y2),
+    w: Math.abs(x2-x1),
+    h: Math.abs(y2-y1),
+    rotate: Math.atan2(y2-y1, x2-x1) * 180 / Math.PI,
+    fill: { color: "000000" },
+    margin: 0
+  });
+}
+
+function addPptxKeyLine(slide, points) {
+  for (let i=0; i<points.length-1; i++) {
+    addPptxLine(slide, points[i][0], points[i][1], points[i+1][0], points[i+1][1]);
+  }
 }
 
 async function downloadPptx() {
@@ -371,57 +391,60 @@ async function downloadPptx() {
   slide.background = { color: "FFFFFF" };
 
   slide.addText(v("project"), {
-    x: 0.3,
-    y: 0.2,
-    w: 12.7,
-    h: 0.4,
-    fontSize: 18,
-    bold: true,
-    align: "center",
-    color: "000000"
+    x: 0.3, y: 0.2, w: 12.7, h: 0.4,
+    fontSize: 22, bold: true, align: "center", color: "000000"
   });
 
-  addPptxBox(slide, 5.55, 0.85, 1.8, 0.55, "Internet", "E8F1FF");
+  slide.addText("☁\nInternet", {
+    x: 5.25, y: 0.8, w: 2.5, h: 0.9,
+    fontSize: 18, align: "center", valign: "mid", color: "000000"
+  });
 
-  addPptxBox(slide, 2.7, 1.75, 2.3, 0.75, `${v("wan1")}\nGW: ${v("wan1gw")}`, "FFF7D6");
-  addPptxBox(slide, 8.2, 1.75, 2.3, 0.75, `${v("wan2")}\nGW: ${v("wan2gw")}`, "FFF7D6");
+  addPptxBox(slide, 2.3, 1.75, 2.4, 0.7, `${v("wan1")}\nGW: ${v("wan1gw")}`);
+  addPptxBox(slide, 8.7, 1.75, 2.4, 0.7, `${v("wan2")}\nGW: ${v("wan2gw")}`);
 
-  addPptxBox(slide, 2.65, 3.05, 2.4, 0.75, "L2スイッチ①\nWAN1収容", "E9F8ED");
-  addPptxBox(slide, 8.15, 3.05, 2.4, 0.75, "L2スイッチ②\nWAN2収容", "E9F8ED");
+  addPptxBox(slide, 2.3, 3.1, 2.4, 0.7, "L2スイッチ①\nWAN1収容");
+  addPptxBox(slide, 8.7, 3.1, 2.4, 0.7, "L2スイッチ②\nWAN2収容");
 
-  addPptxBox(slide, 2.6, 4.55, 3.0, 1.25,
-    `${v("active")}\n${v("model")}\nWAN1: ${v("wan1ip")}\nWAN2: ${v("wan2ip")}\nLAN: ${v("lanip")}`,
-    "E8F1FF"
+  addPptxBox(slide, 2.1, 4.6, 3.3, 1.35,
+    `${v("active")}\n${v("model")}\nWAN1: ${v("wan1ip")}\nWAN2: ${v("wan2ip")}\nLAN: ${v("lanip")}`
   );
 
-  addPptxBox(slide, 7.6, 4.55, 3.0, 1.25,
-    `${v("standby")}\n${v("model")}\nHA: ${v("haip")}`,
-    "E8F1FF"
+  addPptxBox(slide, 8.0, 4.6, 3.3, 1.35,
+    `${v("standby")}\n${v("model")}\nHA: ${v("haip")}`
   );
 
-  addPptxBox(slide, 4.65, 6.45, 3.8, 0.75,
-    `お客様L2スイッチ\n内部NW: ${v("lan")}`,
-    "E9F8ED"
+  addPptxBox(slide, 4.0, 6.75, 3.8, 0.7,
+    `お客様L2スイッチ\n内部NW: ${v("lan")}`
   );
 
-  addPptxBox(slide, 9.7, 6.45, 2.2, 0.75,
-    `公開サーバ\n${v("server")}`,
-    "FFF7D6"
+  addPptxBox(slide, 8.7, 6.75, 2.6, 0.7,
+    `公開サーバ\n${v("server")}`
   );
 
-  addPptxLine(slide, 6.45, 1.4, 3.85, 1.75);
-  addPptxLine(slide, 6.45, 1.4, 9.35, 1.75);
-  addPptxLine(slide, 3.85, 2.5, 3.85, 3.05);
-  addPptxLine(slide, 9.35, 2.5, 9.35, 3.05);
-  addPptxLine(slide, 3.85, 3.8, 4.1, 4.55);
-  addPptxLine(slide, 9.35, 3.8, 9.1, 4.55);
-  addPptxLine(slide, 5.6, 5.15, 7.6, 5.15);
-  addPptxLine(slide, 4.1, 5.8, 5.6, 6.45);
-  addPptxLine(slide, 9.1, 5.8, 7.4, 6.45);
-  addPptxLine(slide, 5.6, 5.2, 9.7, 6.8);
+  addPptxKeyLine(slide, [[5.25,1.25],[3.5,1.25],[3.5,1.75]]);
+  addPptxKeyLine(slide, [[7.75,1.25],[9.9,1.25],[9.9,1.75]]);
+
+  addPptxLine(slide, 3.5, 2.45, 3.5, 3.1);
+  addPptxLine(slide, 9.9, 2.45, 9.9, 3.1);
+
+  addPptxLine(slide, 3.5, 3.8, 3.5, 4.6);
+  addPptxLine(slide, 9.9, 3.8, 9.9, 4.6);
+
+  addPptxLine(slide, 4.7, 3.45, 8.0, 5.0);
+  addPptxLine(slide, 8.7, 3.45, 5.4, 5.0);
+
+  addPptxLine(slide, 5.4, 5.25, 8.0, 5.25);
+
+  addPptxKeyLine(slide, [[3.7,5.95],[3.7,6.35],[5.9,6.35],[5.9,6.75]]);
+  addPptxKeyLine(slide, [[9.65,5.95],[9.65,6.35],[10.0,6.35],[10.0,6.75]]);
 
   await pptx.writeFile({ fileName: "vsr_diagram.pptx" });
 }
+
+document.getElementById("pptxBtn").addEventListener("click", downloadPptx);
+
+render();
 </script>
 </body>
 </html>
