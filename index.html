@@ -359,12 +359,34 @@ async function downloadPptx() {
 
   const slide = pptx.addSlide();
 
-  slide.addText("VSR TEST", {
+  slide.addText(v("project"), {
     x: 1,
-    y: 1,
-    w: 4,
-    h: 1,
-    fontSize: 20
+    y: 0.5,
+    w: 8,
+    h: 0.5,
+    fontSize: 20,
+    bold: true
+  });
+
+  slide.addText("Internet", {
+    x: 5,
+    y: 1.5,
+    w: 2,
+    h: 0.5
+  });
+
+  slide.addText(v("wan1"), {
+    x: 2,
+    y: 3,
+    w: 2,
+    h: 0.5
+  });
+
+  slide.addText(v("wan2"), {
+    x: 8,
+    y: 3,
+    w: 2,
+    h: 0.5
   });
 
   await pptx.writeFile({
