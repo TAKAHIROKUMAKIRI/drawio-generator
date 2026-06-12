@@ -48,7 +48,6 @@
     margin:0;
   }
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
   <script src="https://unpkg.com/pptxgenjs/dist/pptxgen.bundle.js"></script>
 </head>
 
@@ -314,13 +313,12 @@ window.addEventListener("message", function(evt){
 });
 
   document.getElementById("pptxBtn").addEventListener("click", function () {
-  alert("PowerPointボタンは押せています");
   downloadPptx();
 });
   
 render();
   function addPptxBox(slide, x, y, w, h, text, fill) {
-  slide.addShape(pptx.ShapeType.roundRect, {
+  slide.addShape(PptxGenJS.ShapeType.roundRect, {
     x, y, w, h,
     fill: { color: fill },
     line: { color: "333333", width: 1 },
@@ -339,7 +337,7 @@ render();
 }
 
 function addPptxLine(slide, x1, y1, x2, y2) {
-  slide.addShape(pptx.ShapeType.line, {
+  slide.addShape(PptxGenJS.ShapeType.line, {
     x: x1,
     y: y1,
     w: x2 - x1,
