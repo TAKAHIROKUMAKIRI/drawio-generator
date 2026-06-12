@@ -49,6 +49,7 @@
   }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+  <script src="https://unpkg.com/pptxgenjs/dist/pptxgen.bundle.js"></script>
 </head>
 
 <body>
@@ -348,7 +349,7 @@ function addPptxLine(slide, x1, y1, x2, y2) {
 }
 
 function downloadPptx() {
-  window.pptx = new pptxgen();
+  const pptx = new PptxGenJS();
 
   pptx.layout = "LAYOUT_WIDE";
   pptx.author = "VSR Diagram Generator";
