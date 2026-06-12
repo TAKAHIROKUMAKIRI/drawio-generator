@@ -333,48 +333,39 @@ function addPptxBox(slide, x, y, w, h, text) {
     color: "000000",
     align: "center",
     valign: "mid",
-    fill: { color: "FFFFFF", transparency: 100 },
+    fill: { color: "FFFFFF" },
     line: { color: "000000", width: 1 },
     margin: 0.05
   });
 }
 
-function addPptxOval(slide, x, y, w, h, text) {
-  slide.addText(text, {
-    x, y, w, h,
-    fontSize: 16,
-    color: "000000",
-    align: "center",
-    valign: "mid",
-    fill: { color: "FFFFFF", transparency: 100 },
-    line: { color: "000000", width: 1 },
-    shape: "ellipse"
-  });
+function addPptxLine(slide, x1, y1, x2, y2) {
+  const t = 0.018;
+
+  if (Math.abs(y1 - y2) < 0.01) {
+    slide.addText("", {
+      x: Math.min(x1, x2),
+      y: y1,
+      w: Math.abs(x2 - x1),
+      h: t,
+      fill: { color: "000000" },
+      margin: 0
+    });
+  } else if (Math.abs(x1 - x2) < 0.01) {
+    slide.addText("", {
+      x: x1,
+      y: Math.min(y1, y2),
+      w: t,
+      h: Math.abs(y2 - y1),
+      fill: { color: "000000" },
+      margin: 0
+    });
+  }
 }
 
-function addPptxLine(pptx, slide, x1, y1, x2, y2) {
-  slide.addShape(pptx.ShapeType.line, {
-    x: x1,
-    y: y1,
-    w: x2 - x1,
-    h: y2 - y1,
-    line: {
-      color: "000000",
-      width: 1
-    }
-  });
-}
-
-function addPptxKeyLine(pptx, slide, points) {
+function addPptxKeyLine(slide, points) {
   for (let i = 0; i < points.length - 1; i++) {
-    addPptxLine(
-      pptx,
-      slide,
-      points[i][0],
-      points[i][1],
-      points[i + 1][0],
-      points[i + 1][1]
-    );
+    addPptxLine(slide, points[i][0], points[i][1], points[i + 1][0], points[i + 1][1]);
   }
 }
 
@@ -386,17 +377,14 @@ async function downloadPptx() {
   slide.background = { color: "FFFFFF" };
 
   slide.addText(v("project"), {
-    x: 0.3,
-    y: 0.2,
-    w: 12.7,
-    h: 0.4,
-    fontSize: 22,
-    bold: true,
-    align: "center",
-    color: "000000"
+    x: 0.3, y: 0.2, w: 12.7, h: 0.4,
+    fontSize: 22, bold: true, align: "center", color: "000000"
   });
 
-  addPptxOval(slide, 5.35, 0.85, 2.2, 0.8, "Internet");
+  slide.addText("☁\nInternet", {
+    x: 5.25, y: 0.8, w: 2.5, h: 0.9,
+    fontSize: 18, align: "center", valign: "mid", color: "000000"
+  });
 
   addPptxBox(slide, 2.3, 1.75, 2.4, 0.7, `${v("wan1")}\nGW: ${v("wan1gw")}`);
   addPptxBox(slide, 8.7, 1.75, 2.4, 0.7, `${v("wan2")}\nGW: ${v("wan2gw")}`);
@@ -420,26 +408,28 @@ async function downloadPptx() {
     `公開サーバ\n${v("server")}`
   );
 
-  // Internet → 回線：カギ線
-  addPptxKeyLine(pptx, slide, [[5.35,1.25],[3.5,1.25],[3.5,1.75]]);
-  addPptxKeyLine(pptx, slide, [[7.55,1.25],[9.9,1.25],[9.9,1.75]]);
+  // Internet → 回線
+  addPptxKeyLine(slide, [[5.25,1.25],[3.5,1.25],[3.5,1.75]]);
+  addPptxKeyLine(slide, [[7.75,1.25],[9.9,1.25],[9.9,1.75]]);
 
-  // 回線 → WAN収容SW
-  addPptxLine(pptx, slide, 3.5, 2.45, 3.5, 3.1);
-  addPptxLine(pptx, slide, 9.9, 2.45, 9.9, 3.1);
+  // 回線 → L2SW
+  addPptxLine(slide, 3.5, 2.45, 3.5, 3.1);
+  addPptxLine(slide, 9.9, 2.45, 9.9, 3.1);
 
-  // WAN収容SW → VSR：縦＋たすき掛け
-  addPptxLine(pptx, slide, 3.5, 3.8, 3.5, 4.6);
-  addPptxLine(pptx, slide, 9.9, 3.8, 9.9, 4.6);
-  addPptxLine(pptx, slide, 4.7, 3.45, 8.0, 5.0);
-  addPptxLine(pptx, slide, 8.7, 3.45, 5.4, 5.0);
+  // L2SW → VSR 通常
+  addPptxLine(slide, 3.5, 3.8, 3.5, 4.6);
+  addPptxLine(slide, 9.9, 3.8, 9.9, 4.6);
+
+  // たすき掛け：カギ線
+  addPptxKeyLine(slide, [[4.7,3.45],[6.4,3.45],[6.4,4.25],[8.0,4.25],[8.0,4.6]]);
+  addPptxKeyLine(slide, [[8.7,3.45],[7.0,3.45],[7.0,4.25],[5.4,4.25],[5.4,4.6]]);
 
   // HA
-  addPptxLine(pptx, slide, 5.4, 5.25, 8.0, 5.25);
+  addPptxLine(slide, 5.4, 5.25, 8.0, 5.25);
 
   // LAN / DMZ
-  addPptxKeyLine(pptx, slide, [[3.7,5.95],[3.7,6.35],[5.9,6.35],[5.9,6.75]]);
-  addPptxKeyLine(pptx, slide, [[9.65,5.95],[9.65,6.35],[10.0,6.35],[10.0,6.75]]);
+  addPptxKeyLine(slide, [[3.7,5.95],[3.7,6.35],[5.9,6.35],[5.9,6.75]]);
+  addPptxKeyLine(slide, [[9.65,5.95],[9.65,6.35],[10.0,6.35],[10.0,6.75]]);
 
   await pptx.writeFile({ fileName: "vsr_diagram.pptx" });
 }
