@@ -9,7 +9,7 @@
     .form { width:360px; padding:20px; background:#fff; overflow:auto; box-shadow:2px 0 8px #ccc; }
     .preview { flex:1; padding:20px; overflow:auto; }
     label { font-size:12px; font-weight:bold; margin-top:10px; display:block; }
-    input, textarea { width:100%; box-sizing:border-box; padding:7px; margin-top:4px; }
+    input { width:100%; box-sizing:border-box; padding:7px; margin-top:4px; }
     button { width:100%; padding:10px; margin-top:12px; font-weight:bold; cursor:pointer; }
     svg { background:white; border:1px solid #ccc; }
     .box { fill:#ffffff; stroke:#333; stroke-width:1.5; rx:8; }
@@ -21,6 +21,7 @@
     .title { font-size:20px; font-weight:bold; }
   </style>
 </head>
+
 <body>
 <div class="wrap">
   <div class="form">
@@ -71,7 +72,8 @@
     <label>公開サーバ</label>
     <input id="server" value="172.16.1.10">
 
-    <button onclick="downloadDrawio()">draw.io出力</button>
+    <button onclick="openInDrawio()">draw.ioで編集</button>
+    <button onclick="downloadDrawio()">draw.ioファイル保存</button>
     <button onclick="downloadSvg()">SVG出力</button>
   </div>
 
@@ -86,9 +88,13 @@ const ids = [
   "wan1ip","wan2ip","lanip","dmzip","haip","lan","server"
 ];
 
-ids.forEach(id => document.getElementById(id).addEventListener("input", render));
+ids.forEach(id => {
+  document.getElementById(id).addEventListener("input", render);
+});
 
-function v(id){ return document.getElementById(id).value || ""; }
+function v(id){
+  return document.getElementById(id).value || "";
+}
 
 function esc(s){
   return String(s)
@@ -180,13 +186,12 @@ function edge(id, source, target){
     </mxCell>`;
 }
 
-function downloadDrawio(){
-  const styleBox = "rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;";
+function generateDrawioXml(){
   const styleBlue = "rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#333333;";
   const styleGreen = "rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f8ed;strokeColor=#333333;";
   const styleYellow = "rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7d6;strokeColor=#333333;";
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="app.diagrams.net">
   <diagram name="VSR構成図">
     <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
@@ -225,8 +230,20 @@ function downloadDrawio(){
     </mxGraphModel>
   </diagram>
 </mxfile>`;
+}
 
+function downloadDrawio(){
+  const xml = generateDrawioXml();
   download(new Blob([xml], {type:"application/xml"}), "vsr_diagram.drawio");
+}
+
+function openInDrawio(){
+  const xml = generateDrawioXml();
+
+  const encoded = btoa(unescape(encodeURIComponent(xml)));
+  const url = "https://app.diagrams.net/?ui=min&title=vsr_diagram.drawio#R" + encoded;
+
+  window.open(url, "_blank");
 }
 
 render();
