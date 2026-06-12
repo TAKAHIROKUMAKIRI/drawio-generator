@@ -324,24 +324,43 @@ render();
     color: "000000",
     align: "center",
     valign: "mid",
-    fit: "shrink",
     fill: { color: fill },
     line: { color: "333333", width: 1 },
-    margin: 0.08
+    margin: 0.05
   });
 }
 
 function addPptxLine(slide, x1, y1, x2, y2) {
-  slide.addShape("line", {
-    x: x1,
-    y: y1,
-    w: x2 - x1,
-    h: y2 - y1,
-    line: {
-      color: "333333",
-      width: 1.2
-    }
-  });
+  const thickness = 0.02;
+
+  if (Math.abs(y1 - y2) < 0.01) {
+    slide.addText("", {
+      x: Math.min(x1, x2),
+      y: y1,
+      w: Math.abs(x2 - x1),
+      h: thickness,
+      fill: { color: "333333" },
+      margin: 0
+    });
+    return;
+  }
+
+  if (Math.abs(x1 - x2) < 0.01) {
+    slide.addText("", {
+      x: x1,
+      y: Math.min(y1, y2),
+      w: thickness,
+      h: Math.abs(y2 - y1),
+      fill: { color: "333333" },
+      margin: 0
+    });
+    return;
+  }
+
+  const midY = y1 + (y2 - y1) / 2;
+  addPptxLine(slide, x1, y1, x1, midY);
+  addPptxLine(slide, x1, midY, x2, midY);
+  addPptxLine(slide, x2, midY, x2, y2);
 }
 
 async function downloadPptx() {
