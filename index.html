@@ -64,53 +64,62 @@
 <select id="templateType">
   <option value="ha">HA構成</option>
   <option value="single">単体構成</option>
-  <option value="azure">Azure VPN構成</option>
 </select>
     
     <label>案件名</label>
-    <input id="project" value="サンプル案件 VSR構成図">
+<input id="project" value="サンプル案件 VSR構成図">
 
-    <label>回線① 名称</label>
-    <input id="wan1" value="メイン回線">
+<label>回線① 名称</label>
+<input id="wan1" value="メイン回線">
 
-    <label>回線① GW</label>
-    <input id="wan1gw" value="203.0.113.6">
+<label>回線① GW</label>
+<input id="wan1gw" value="203.0.113.6">
 
-    <label>回線② 名称</label>
-    <input id="wan2" value="バックアップ回線">
+<div class="haOnly">
+  <label>回線② 名称</label>
+  <input id="wan2" value="バックアップ回線">
+</div>
 
-    <label>回線② GW</label>
-    <input id="wan2gw" value="203.0.111.6">
+<div class="haOnly">
+  <label>回線② GW</label>
+  <input id="wan2gw" value="203.0.111.6">
+</div>
 
-    <label>VSR機種</label>
-    <input id="model" value="VSR n2000A 10G4C">
+<label>VSR機種</label>
+<input id="model" value="VSR n2000A 10G4C">
 
-    <label>アクティブ機名</label>
-    <input id="active" value="VSR-ACTIVE">
+<label>アクティブ機名</label>
+<input id="active" value="VSR-ACTIVE">
 
-    <label>スタンバイ機名</label>
-    <input id="standby" value="VSR-STANDBY">
+<div class="haOnly">
+  <label>スタンバイ機名</label>
+  <input id="standby" value="VSR-STANDBY">
+</div>
 
-    <label>WAN1 IP</label>
-    <input id="wan1ip" value="203.0.113.2/29">
+<label>WAN1 IP</label>
+<input id="wan1ip" value="203.0.113.2/29">
 
-    <label>WAN2 IP</label>
-    <input id="wan2ip" value="203.0.111.2/29">
+<div class="haOnly">
+  <label>WAN2 IP</label>
+  <input id="wan2ip" value="203.0.111.2/29">
+</div>
 
-    <label>LAN IP</label>
-    <input id="lanip" value="192.168.1.254/24">
+<label>LAN IP</label>
+<input id="lanip" value="192.168.1.254/24">
 
-    <label>DMZ IP</label>
-    <input id="dmzip" value="172.16.1.1/24">
+<label>DMZ IP</label>
+<input id="dmzip" value="172.16.1.1/24">
 
-    <label>HA IP</label>
-    <input id="haip" value="10.255.255.1/30">
+<div class="haOnly">
+  <label>HA IP</label>
+  <input id="haip" value="10.255.255.1/30">
+</div>
 
-    <label>内部ネットワーク</label>
-    <input id="lan" value="192.168.1.0/24">
+<label>内部ネットワーク</label>
+<input id="lan" value="192.168.1.0/24">
 
-    <label>公開サーバ</label>
-    <input id="server" value="172.16.1.10">
+<label>公開サーバ</label>
+<input id="server" value="172.16.1.10">
 
     <button onclick="openDrawioEmbed()">draw.ioで直接編集</button>
     <button id="pptxBtn">PowerPoint出力</button>
@@ -142,6 +151,43 @@ ids.forEach(id => {
   document.getElementById(id).addEventListener("input", render);
 });
 
+  document.getElementById("templateType").addEventListener("change", applyTemplate);
+
+function applyTemplate(){
+  const type = v("templateType");
+
+  if (type === "single") {
+    document.getElementById("wan1").value = "回線";
+    document.getElementById("wan2").value = "";
+    document.getElementById("wan2gw").value = "";
+    document.getElementById("wan2ip").value = "";
+    document.getElementById("standby").value = "";
+    document.getElementById("haip").value = "";
+
+    document.getElementById("wan2").closest("label");
+  }
+
+  if (type === "ha") {
+    document.getElementById("wan1").value = "メイン回線";
+    document.getElementById("wan2").value = "バックアップ回線";
+    document.getElementById("wan2gw").value = "203.0.111.6";
+    document.getElementById("wan2ip").value = "203.0.111.2/29";
+    document.getElementById("standby").value = "VSR-STANDBY";
+    document.getElementById("haip").value = "10.255.255.1/30";
+  }
+
+  updateFieldVisibility();
+  render();
+}
+
+  function updateFieldVisibility(){
+  const isHa = v("templateType") === "ha";
+
+  document.querySelectorAll(".haOnly").forEach(el => {
+    el.style.display = isHa ? "block" : "none";
+  });
+}
+  
 function v(id){ return document.getElementById(id).value || ""; }
 
 function esc(s){
@@ -507,6 +553,7 @@ addPptxKeyLine(slide, [[8.7,3.45],[7.4,3.45],[7.4,4.6],[5.4,4.6]]);
 
 document.getElementById("pptxBtn").addEventListener("click", downloadPptx);
 
+applyTemplate();
 render();
 </script>
 </body>
