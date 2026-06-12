@@ -352,27 +352,23 @@ function addPptxLine(slide, x1, y1, x2, y2) {
 }
 
 function downloadPptx() {
+
   const pptx = new PptxGenJS();
 
-  pptx.layout = "LAYOUT_WIDE";
-  pptx.author = "VSR Diagram Generator";
-  pptx.subject = "VSR構成図";
-  pptx.title = v("project");
-  pptx.company = "VarioSecure";
-
   const slide = pptx.addSlide();
-  slide.background = { color: "FFFFFF" };
 
-  slide.addText(v("project"), {
-    x: 0.3,
-    y: 0.2,
-    w: 12.7,
-    h: 0.4,
-    fontSize: 18,
-    bold: true,
-    align: "center",
-    color: "000000"
+  slide.addText("TEST", {
+    x: 1,
+    y: 1,
+    w: 3,
+    h: 1
   });
+
+  pptx.writeFile({
+    fileName: "test.pptx"
+  });
+
+}
 
   addPptxBox(slide, 5.55, 0.85, 1.8, 0.55, "Internet", "E8F1FF");
 
