@@ -103,7 +103,7 @@
     <input id="server" value="172.16.1.10">
 
     <button onclick="openDrawioEmbed()">draw.ioで直接編集</button>
-    <button onclick="downloadPptx()">PowerPoint出力</button>
+    <button id="pptxBtn">PowerPoint出力</button>
     <button onclick="downloadDrawio()">draw.ioファイル保存</button>
     <button onclick="downloadSvg()">SVG出力</button>
   </div>
@@ -313,6 +313,11 @@ window.addEventListener("message", function(evt){
   }
 });
 
+  document.getElementById("pptxBtn").addEventListener("click", function () {
+  alert("PowerPointボタンは押せています");
+  downloadPptx();
+});
+  
 render();
   function addPptxBox(slide, x, y, w, h, text, fill) {
   slide.addShape(pptx.ShapeType.roundRect, {
