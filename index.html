@@ -12,7 +12,12 @@
   .form { width:360px; padding:20px; background:#fff; overflow:auto; box-shadow:2px 0 8px #ccc; }
   .preview { flex:1; padding:20px; overflow:auto; }
   label { font-size:12px; font-weight:bold; margin-top:10px; display:block; }
-  input { width:100%; box-sizing:border-box; padding:7px; margin-top:4px; }
+  input, select {
+  width:100%;
+  box-sizing:border-box;
+  padding:7px;
+  margin-top:4px;
+}
   button { width:100%; padding:10px; margin-top:12px; font-weight:bold; cursor:pointer; }
   svg { background:white; border:1px solid #ccc; }
   .box { fill:#fff; stroke:#000; stroke-width:1.6; rx:8; }
@@ -55,6 +60,13 @@
   <div class="form">
     <h2>構成図入力</h2>
 
+    <label>テンプレート</label>
+<select id="templateType">
+  <option value="ha">HA構成</option>
+  <option value="single">単体構成</option>
+  <option value="azure">Azure VPN構成</option>
+</select>
+    
     <label>案件名</label>
     <input id="project" value="サンプル案件 VSR構成図">
 
@@ -121,6 +133,7 @@
 
 <script>
 const ids = [
+  "templateType",
   "project","wan1","wan1gw","wan2","wan2gw","model","active","standby",
   "wan1ip","wan2ip","lanip","dmzip","haip","lan","server"
 ];
@@ -174,7 +187,23 @@ function keyLine(svg, points){
   svg.innerHTML += `<path class="line" d="${d}"></path>`;
 }
 
-function render(){
+  function render(){
+  const type = v("templateType");
+
+  if (type === "single") {
+    renderSingle();
+    return;
+  }
+
+  if (type === "azure") {
+    renderAzure();
+    return;
+  }
+
+  renderHa();
+}
+  
+function renderHa(){
   const svg = document.getElementById("diagram");
   svg.innerHTML = `<text class="title" x="550" y="35">${esc(v("project"))}</text>`;
 
@@ -210,6 +239,48 @@ function render(){
   keyLine(svg, [[800,610],[800,655],[850,655],[850,690]]);
 }
 
+  function renderSingle(){
+  const svg = document.getElementById("diagram");
+  svg.innerHTML = `<text class="title" x="550" y="35">${esc(v("project"))}</text>`;
+
+  cloud(svg, 425, 70, 250, 120, "Internet");
+
+  box(svg, 445, 210, 220, 70, `${v("wan1")}\nGW: ${v("wan1gw")}`);
+
+  box(svg, 425, 360, 260, 130,
+    `${v("active")}\n${v("model")}\nWAN1: ${v("wan1ip")}\nLAN: ${v("lanip")}`
+  );
+
+  box(svg, 380, 610, 350, 70, `お客様L2スイッチ\n内部NW: ${v("lan")}`);
+
+  keyLine(svg, [[550,165],[550,210]]);
+  line(svg,550,280,550,360);
+  line(svg,550,490,550,610);
+}
+
+function renderAzure(){
+  const svg = document.getElementById("diagram");
+  svg.innerHTML = `<text class="title" x="550" y="35">${esc(v("project"))}</text>`;
+
+  cloud(svg, 425, 70, 250, 120, "Internet");
+
+  box(svg, 200, 230, 240, 80, `${v("wan1")}\nGW: ${v("wan1gw")}`);
+
+  box(svg, 430, 390, 260, 130,
+    `${v("active")}\n${v("model")}\nWAN1: ${v("wan1ip")}\nLAN: ${v("lanip")}`
+  );
+
+  box(svg, 760, 230, 240, 90, `Azure VPN Gateway\n接続先VPN`);
+
+  box(svg, 390, 610, 350, 70, `お客様L2スイッチ\n内部NW: ${v("lan")}`);
+
+  keyLine(svg, [[520,165],[320,165],[320,230]]);
+  keyLine(svg, [[580,165],[880,165],[880,230]]);
+  line(svg,320,310,500,390);
+  line(svg,880,320,690,455);
+  line(svg,560,520,560,610);
+}
+  
 function mxCell(id, value, x, y, w, h, style){
   return `
     <mxCell id="${id}" value="${esc(value).replaceAll("\n","&lt;br&gt;")}" style="${style}" vertex="1" parent="1">
