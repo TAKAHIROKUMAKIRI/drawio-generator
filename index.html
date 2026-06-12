@@ -237,13 +237,27 @@ function downloadDrawio(){
   download(new Blob([xml], {type:"application/xml"}), "vsr_diagram.drawio");
 }
 
-function openInDrawio(){
+function openInDrawio() {
+
   const xml = generateDrawioXml();
 
-  const encoded = btoa(unescape(encodeURIComponent(xml)));
-  const url = "https://app.diagrams.net/?ui=min&title=vsr_diagram.drawio#R" + encoded;
+  const blob = new Blob(
+    [xml],
+    { type: "application/xml" }
+  );
 
-  window.open(url, "_blank");
+  const a = document.createElement("a");
+
+  a.href = URL.createObjectURL(blob);
+
+  a.download = "vsr_diagram.drawio";
+
+  a.click();
+
+  window.open(
+    "https://app.diagrams.net/",
+    "_blank"
+  );
 }
 
 render();
